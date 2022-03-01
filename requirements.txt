@@ -1,0 +1,2 @@
+SharePlum~=0.5.1
+environs~=9.5.0
