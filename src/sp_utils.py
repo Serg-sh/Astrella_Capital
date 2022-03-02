@@ -1,4 +1,3 @@
-import base64
 import os
 import sys
 import time
@@ -29,29 +28,40 @@ def o365_login(tenant, username, password, site_o365, shared_folder):
     :param shared_folder:
     :return: возвращяет авторизированую папку на шар поинт
     """
-    authcookie = Office365(tenant,
-                           username=base64.b64decode(username).decode('utf-8'),
-                           password=base64.b64decode(password).decode('utf-8')).GetCookies()
+    authcookie = Office365(tenant, username=username, password=password).GetCookies()
     site = Site(site_o365, version=Version.v365, authcookie=authcookie)
     folder_shared_o365 = site.Folder(shared_folder)
     print(time_now(), f'    Login to O365 to {site_o365} is successful!')
     return folder_shared_o365
 
 
-def copy_to_sp(tenant: str, username: str, password: str, site_o365: str, shared_folder: str, local_folder: str):
+def copy_to_sp_two_last_file(tenant: str, username: str, password: str,
+                             site_o365: str, shared_folder: str, local_folder: str):
+    """
+    Копирует 2 последних файла в ШП из указанной директории,
+     предварительно сортирует файлы по временисоздания
+
+    :param tenant:
+    :param username:
+    :param password:
+    :param site_o365:
+    :param shared_folder:
+    :param local_folder:
+    :return:
+    """
     try:
         folder_shared_o365 = o365_login(tenant, username, password, site_o365, shared_folder)
 
-        files_local = [f for f in os.listdir(local_folder)]
+        files_local = [f for f in os.listdir(local_folder)]  # список файлов в указанной директории
 
-        for file in sorted(files_local, key=lambda f: os.path.getatime(os.path.join(local_folder, f)), reverse=True)[
-                    :2]:
+        for file in sorted(files_local, key=lambda f: os.path.getatime(os.path.join(local_folder, f)),
+                           reverse=True)[:2]:
             file_abs_path = os.path.join(local_folder, file)
             print(time_now(), f'    File: {file_abs_path}')
             print(time_now(), f'    Created: {time.ctime(os.path.getatime(file_abs_path))}')
             print(time_now(), f'    File size: {os.path.getsize(file_abs_path) // 1024 // 1024} Mb')
 
-            with open(file_abs_path, 'rb') as f:
+            with open(file_abs_path, 'rb', buffering=1024) as f:
                 data = f.read()
                 folder_shared_o365.upload_file(data, file)
                 print(time_now(), f'    File: {file} copied successfully.')
@@ -66,10 +76,3 @@ def copy_to_sp(tenant: str, username: str, password: str, site_o365: str, shared
 
 def time_now():
     return datetime.now().strftime('%Y-%m-%d %H:%M')
-
-# e = base64.b64encode(b'33Gjhncbufhf')
-# print(e)
-#
-# d = base64.b64decode('MzNHamhuY2J1Zmhm')
-#
-# print(d.decode('utf-8'))
