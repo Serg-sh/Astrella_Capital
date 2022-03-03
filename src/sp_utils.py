@@ -75,4 +75,4 @@ def copy_to_sp_two_last_file(tenant: str, username: str, password: str,
 
 
 def time_now():
-    return datetime.now().strftime('%Y-%m-%d %H:%M')
+    return datetime.now().strftime('D%Y%m%d_T%H%M%S')
