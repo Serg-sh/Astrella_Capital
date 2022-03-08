@@ -18,6 +18,11 @@ from shareplum.site import Version
 # shared_folder: Shared folder an site - 'Shared Documents/ИТ Служба/BackUps/Astrella/1C_UTP/'
 # local_folder: Local folder an server - '//10.123.11.10/DB_backups/astrella/'
 
+
+def time_now():
+    return datetime.now().strftime('D%Y%m%d_T%H%M%S')
+
+
 def o365_login(tenant, username, password, site_o365, shared_folder):
     """
     подключается к шар поинт
@@ -66,7 +71,7 @@ def copy_to_sp_two_last_file(tenant: str, username: str, password: str,
                 folder_shared_o365.upload_file(data, file)
                 print(time_now(), f'    File: {file} copied successfully.')
     except Exception as e:
-        print(time_now(), '    Script is end with error!!!.'.upper())
+        print(time_now(), f'    Script is end with error!!!.'.upper())
         print(time_now(), f'    {e}')
         print(time_now(), f'    {traceback.format_exc()}')
         sys.exit()
@@ -74,5 +79,24 @@ def copy_to_sp_two_last_file(tenant: str, username: str, password: str,
         print((time_now()), f'    Copy to folder {site_o365 + shared_folder} completed successfully.')
 
 
-def time_now():
-    return datetime.now().strftime('D%Y%m%d_T%H%M%S')
+def copy_file_to_sp(tenant: str, username: str, password: str,
+                    site_o365: str, shared_folder: str, list_files: list[str]):
+    try:
+        folder_shared_o365 = o365_login(tenant, username, password, site_o365, shared_folder)
+        for file in list_files:
+            print(time_now(), f'    File: {file}')
+            print(time_now(), f'    Created: {time.ctime(os.path.getatime(file))}')
+            print(time_now(), f'    File size: {os.path.getsize(file) // 1024 // 1024} Mb')
+
+            with open(file, 'rb', buffering=1024) as f:
+                data = f.read()
+                folder_shared_o365.upload_file(data, file_name=file.split('/')[-1])
+                print(time_now(), f'    File: {file} copied successfully.')
+
+    except Exception as e:
+        print(time_now(), f'    Script is end with error!!!.'.upper())
+        print(time_now(), f'    {e}')
+        print(time_now(), f'    {traceback.format_exc()}')
+        sys.exit()
+    else:
+        print((time_now()), f'    Copy to folder {site_o365 + shared_folder} completed successfully.')
