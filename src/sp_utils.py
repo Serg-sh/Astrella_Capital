@@ -36,7 +36,8 @@ def o365_login(tenant, username, password, site_o365, shared_folder):
     authcookie = Office365(tenant, username=username, password=password).GetCookies()
     site = Site(site_o365, version=Version.v365, authcookie=authcookie)
     folder_shared_o365 = site.Folder(shared_folder)
-    print(time_now(), f'    Login to O365 to {site_o365} is successful!')
+    logging(f"{time_now()}\nLogin to O365 to {site_o365} is successful!")
+    # print(time_now(), f'    Login to O365 to {site_o365} is successful!')
     return folder_shared_o365
 
 
@@ -84,19 +85,37 @@ def copy_file_to_sp(tenant: str, username: str, password: str,
     try:
         folder_shared_o365 = o365_login(tenant, username, password, site_o365, shared_folder)
         for file in list_files:
-            print(time_now(), f'    File: {file}')
-            print(time_now(), f'    Created: {time.ctime(os.path.getatime(file))}')
-            print(time_now(), f'    File size: {os.path.getsize(file) // 1024 // 1024} Mb')
+            text = f'{time_now()}\n' \
+                   f'File: {file}\n' \
+                   f'Created: {time.ctime(os.path.getatime(file))}\n' \
+                   f'File size: {os.path.getsize(file) // 1024 // 1024} Mb\n'
+
+            logging(text)
 
             with open(file, 'rb', buffering=1024) as f:
                 data = f.read()
                 folder_shared_o365.upload_file(data, file_name=file.split('/')[-1])
-                print(time_now(), f'    File: {file} copied successfully.')
+                # print(time_now(), f'    File: {file} copied successfully.')
+                text = f'{time_now()}\n' \
+                       f'File: {file}\n' \
+                       f'Created: {time.ctime(os.path.getatime(file))}\n' \
+                       f'File size: {os.path.getsize(file) // 1024 // 1024} Mb\n' \
+                       f'{time_now()}  File: {file} copied to SP folder:\n' \
+                       f'{site_o365 + shared_folder}\ncompleted successfully.\n'
+                logging(text)
 
     except Exception as e:
-        print(time_now(), f'    Script is end with error!!!.'.upper())
-        print(time_now(), f'    {e}')
-        print(time_now(), f'    {traceback.format_exc()}')
+        text = f"{time_now()}\n" \
+               f"{'Script is end with error!!!'.upper()}\n" \
+               f"{e}\n" \
+               f"{traceback.format_exc()}\n"
+        logging(text)
         sys.exit()
     else:
-        print((time_now()), f'    Copy to folder {site_o365 + shared_folder} completed successfully.')
+        logging(f'{time_now()}\nCopy to folder:\n{site_o365 + shared_folder}\ncompleted successfully.\n')
+
+
+def logging(text):
+    with open('log.txt', 'a') as log:
+        data = f"--------\n{text}--------\n"
+        log.write(data)

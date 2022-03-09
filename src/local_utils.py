@@ -1,10 +1,12 @@
 import os
+import traceback
 import zipfile
 from datetime import datetime
 from typing import Union
 
-pachTo1cBases = ""
-pathTo1cBackups = ""
+
+# pathTo1cBases = ""
+# pathTo1cBackups = ""
 
 # bases_1C = ('ADI',
 #             'IKA',
@@ -21,6 +23,12 @@ def time_now():
     return datetime.now().strftime('D%Y%m%d_T%H%M%S')
 
 
+def logging(text):
+    with open('log.txt', "a") as log:
+        data = f"--------\n{text}--------\n"
+        log.write(data)
+
+
 def zip_and_copy(list_name_folder: Union[list, tuple],
                  path_to_1c_bases: str,
                  path_to_1c_backups: str) -> list:
@@ -32,7 +40,14 @@ def zip_and_copy(list_name_folder: Union[list, tuple],
         with zipfile.ZipFile(name_arc, 'w') as zip_arc:
             for folder, subfolders, files in os.walk(dir_patch):
                 for file in files:
-                    zip_arc.write(os.path.join(folder, file), os.path.relpath(os.path.join(folder, file), dir_patch),
-                                  compress_type=zipfile.ZIP_DEFLATED)
+                    try:
+                        zip_arc.write(os.path.join(folder, file),
+                                      os.path.relpath(os.path.join(folder, file), dir_patch),
+                                      compress_type=zipfile.ZIP_DEFLATED)
+                        logging(f"{time_now()}\nDONE! {file} zipped successfully!")
+                    except Exception as e:
+                        logging(f"{time_now()}\nERROR!!! File {file} don't copyed!\n"
+                                f"{e}"
+                                f"{traceback.format_exc()}")
         list_arc_name.append(name_arc)
     return list_arc_name
