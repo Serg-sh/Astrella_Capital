@@ -36,7 +36,7 @@ def o365_login(tenant, username, password, site_o365, shared_folder):
     authcookie = Office365(tenant, username=username, password=password).GetCookies()
     site = Site(site_o365, version=Version.v365, authcookie=authcookie)
     folder_shared_o365 = site.Folder(shared_folder)
-    logging(f"{time_now()}\nLogin to O365 to {site_o365} is successful!")
+    logging(f"{time_now()}\nLogin to O365 to {site_o365} is successful!\n")
     # print(time_now(), f'    Login to O365 to {site_o365} is successful!')
     return folder_shared_o365
 
@@ -83,26 +83,27 @@ def copy_to_sp_two_last_file(tenant: str, username: str, password: str,
 def copy_file_to_sp(tenant: str, username: str, password: str,
                     site_o365: str, shared_folder: str, list_files: list[str]):
     try:
-        folder_shared_o365 = o365_login(tenant, username, password, site_o365, shared_folder)
         for file in list_files:
-            text = f'{time_now()}\n' \
-                   f'File: {file}\n' \
-                   f'Created: {time.ctime(os.path.getatime(file))}\n' \
-                   f'File size: {os.path.getsize(file) // 1024 // 1024} Mb\n'
-
-            logging(text)
-
-            with open(file, 'rb', buffering=1024) as f:
-                data = f.read()
-                folder_shared_o365.upload_file(data, file_name=file.split('/')[-1])
-                # print(time_now(), f'    File: {file} copied successfully.')
-                text = f'{time_now()}\n' \
-                       f'File: {file}\n' \
-                       f'Created: {time.ctime(os.path.getatime(file))}\n' \
-                       f'File size: {os.path.getsize(file) // 1024 // 1024} Mb\n' \
-                       f'{time_now()}  File: {file} copied to SP folder:\n' \
-                       f'{site_o365 + shared_folder}\ncompleted successfully.\n'
-                logging(text)
+            folder_shared_o365 = o365_login(tenant, username, password, site_o365, shared_folder)
+            try:
+                with open(file, 'rb', buffering=1024) as f:
+                    data = f.read()
+                    folder_shared_o365.upload_file(data, file_name=file.split('/')[-1])
+                    # print(time_now(), f'    File: {file} copied successfully.')
+                    text = f'{time_now()}\n' \
+                           f'DONE! File: {file}\n' \
+                           f'Created: {time.ctime(os.path.getatime(file))}\n' \
+                           f'File size: {os.path.getsize(file) // 1024 // 1024} Mb\n' \
+                           f'{time_now()}  File: {file} copied to SP folder:\n' \
+                           f'{site_o365 + shared_folder}\ncompleted successfully.\n'
+                    logging(text)
+                    time.sleep(15)
+            except Exception as err:
+                logging(f"{time_now()}\n"
+                        f"ERROR!!! File: {file}. Size {os.path.getsize(file) // 1024 // 1024} Mb\n"
+                        f"Don't copyed to SP folder!\n"
+                        f"{err}\n"
+                        f"{traceback.format_exc()}")
 
     except Exception as e:
         text = f"{time_now()}\n" \
