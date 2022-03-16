@@ -4,9 +4,8 @@ import zipfile
 from datetime import datetime
 from typing import Union
 
+SIZE = 245
 
-# pathTo1cBases = ""
-# pathTo1cBackups = ""
 
 # bases_1C = ('ADI',
 #             'IKA',
@@ -29,6 +28,29 @@ def logging(text):
         log.write(data)
 
 
+def check_size_file(file) -> bool:
+    """
+    Возвращает True если файл меньше 245 Мб и False если больше.
+    :param file:
+    :return: bool
+    """
+    return True if os.path.getsize(file) // 1024 // 1024 <= SIZE else False
+
+
+def split_file(file):
+    parts_of_file = []
+    num_parts = 1
+    with open(file, 'rb') as f:
+        data = f.read(SIZE * 1024 * 1024)
+        while data:
+            with open(f"{file}_part{num_parts}", 'wb') as out_file:
+                out_file.write(data)
+            parts_of_file.append(f"{file}_part{num_parts}")
+            num_parts += 1
+            data = f.read(SIZE * 1024 * 1024)
+    return parts_of_file
+
+
 def zip_and_copy(list_name_folder: Union[list, tuple],
                  path_to_1c_bases: str,
                  path_to_1c_backups: str) -> list:
@@ -49,5 +71,24 @@ def zip_and_copy(list_name_folder: Union[list, tuple],
                         logging(f"{time_now()}\nERROR!!! File {file} don't copyed!\n"
                                 f"{e}"
                                 f"{traceback.format_exc()}")
-        list_arc_name.append(name_arc)
+        if check_size_file(name_arc):
+            list_arc_name.append(name_arc)
+        else:
+            list_arc_name.extend(split_file(name_arc))
+
     return list_arc_name
+
+
+def merge_files(files_l: list[str]):
+    """
+    Сливает бинарные файлы _part в исходный
+    :param files_l:
+    :return:
+    """
+    for f in files_l:
+        with open(f, 'rb') as p, open(f"{files_l[0].split('_')[0]}_", 'ab') as out:
+            out.write(p.read())
+
+
+# files = ["./data/big.zip_part1", "./data/big.zip_part2"]
+# merge_files(files)
