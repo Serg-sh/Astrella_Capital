@@ -83,18 +83,18 @@ def copy_to_sp_two_last_file(tenant: str, username: str, password: str,
 def copy_file_to_sp(tenant: str, username: str, password: str,
                     site_o365: str, shared_folder: str, list_files: list[str]):
     try:
-        folder_shared_o365 = o365_login(tenant, username, password, site_o365, shared_folder)
         for file in list_files:
+            folder_shared_o365 = o365_login(tenant, username, password, site_o365, shared_folder)
             try:
                 with open(file, 'rb') as f:
                     data = f.read()
                     folder_shared_o365.upload_file(data, file_name=file.split('/')[-1])
                 text = f'{time_now()}\n' \
-                           f'DONE! File: {file}\n' \
-                           f'Created: {time.ctime(os.path.getatime(file))}\n' \
-                           f'File size: {os.path.getsize(file) // 1024 // 1024} Mb\n' \
-                           f'{time_now()}  File: {file} copied to SP folder:\n' \
-                           f'{site_o365 + shared_folder}\ncompleted successfully.\n'
+                       f'DONE! File: {file}\n' \
+                       f'Created: {time.ctime(os.path.getatime(file))}\n' \
+                       f'File size: {os.path.getsize(file) // 1024 // 1024} Mb\n' \
+                       f'{time_now()}  File: {file} copied to SP folder:\n' \
+                       f'{site_o365 + shared_folder}\ncompleted successfully.\n'
                 logging(text)
             except Exception as err:
                 text = f"{time_now()}\n" \
